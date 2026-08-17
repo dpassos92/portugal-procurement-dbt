@@ -1,0 +1,5 @@
+venv/
+*.json
+*.zip
+!dbt_project.yml
+data/
