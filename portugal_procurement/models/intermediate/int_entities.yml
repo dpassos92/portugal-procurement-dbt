@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_entities
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null
+      - name: role
+        data_tests:
+          - accepted_values:
+              values: ['adjudicante', 'adjudicatario']
+      - name: entity_key
+        data_tests:
+          - not_null
