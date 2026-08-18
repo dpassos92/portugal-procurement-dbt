@@ -15,10 +15,13 @@ Since there's no way to know when a specific row last changed, I'm capturing dat
 
 ## Complete
 Uniqueness/duplication:
-Raw data contains 226,998 rows with 225,920 distinct idcontrato values, leaving 1,078 duplicated rows (0.47%). Two different behaviours are behind that number:
-- some duplicates are byte-for-byte identical (e.g. idcontrato = 10804349, 9 identical rows)
-- others are genuine updates where one field changed (e.g. idcontrato = 10532672, ContratEcologico flipped from "Não" to "Sim" between the two rows)
-The latter behaviour is more problematic, since there's no way to verify which is the "current" row. No update timestamp exists in the dataset.
+Raw data contains 226,998 rows with 225,920 distinct idcontrato values, leaving 1,078 duplicated rows (0.47%), across 1,066 duplicate idcontrato groups (1,113 pairwise comparisons once group sizes >2 are accounted for — one contract, 10804349, was republished 9 times). Checked every column pairwise across all 1,066 groups, not just a sample:
+- 70 pairs are byte-for-byte identical across all 39 columns — pure re-publish noise. 36 of these 70 come from the single 9-row idcontrato = 10804349.
+- 921 pairs differ in exactly one field: ContratEcologico (e.g. idcontrato = 10532672, "Não" -> "Sim")
+- 122 pairs differ in exactly one field: TipoCriterioAdjudicacao
+- 0 pairs have both fields differ at once
+- no other column, across any group, ever differs
+Checked dataPublicacao, dataCelebracaoContrato and dataDecisaoAdjudicacao specifically as a possible tiebreak signal, all three are identical between duplicate rows in every pair checked, so they represent the contract's own dates, not a per-row edit timestamp. No timestamp signal exists anywhere in the schema to say which duplicate is current.
 
 Field-level findings:
 - idprocedimento is 0% null, fully populated, reliable
@@ -40,9 +43,9 @@ CPV, however, is a different scenario: it's a fixed classification code (Common 
 Locations up to 218, CPV codes up to 40 per contract — real bridge-table territory, not flattenable.
 
 ## Design decisions arising from this
-Within-snapshot duplicates: 9 identical rows for the same idcontrato within a single pull (e.g. 10804349) are straightforward re-publish noise, deduplicated directly (DISTINCT / ROW_NUMBER) before anything else happens to the data.
+Within-snapshot duplicates: 9 identical rows for the same idcontrato within a single pull (e.g. 10804349) are straightforward re-publish noise, deduplicated directly (DISTINCT / ROW_NUMBER) before anything else happens to the data. For the pairs that aren't identical, there's no signal to say which row is current (see Complete), so the dedup uses a deterministic but arbitrary tiebreak: `order by ContratEcologico, TipoCriterioAdjudicacao` picks the same row every run, doesn't claim to know which value is "right."
 
-Cross-time changes: rather than picking one "current" row and discarding the rest, track changes with a dbt snapshot using the check strategy, scoped to ContratEcologico, precoContratual, dataFechoContrato, and the normalized entity name — not check_cols: 'all', and not the raw adjudicante/adjudicatarios string.
+Cross-time changes: rather than picking one "current" row and discarding the rest, track changes with a dbt snapshot using the check strategy, scoped to ContratEcologico, TipoCriterioAdjudicacao, precoContratual, dataFechoContrato, and the normalized entity name — not check_cols: 'all', and not the raw adjudicante/adjudicatarios string.
 The snapshot runs against a cleaned staging model where whitespace and punctuation are already normalized, so cosmetic drift (e.g. "E. P. E." vs "E.P.E") doesn't get flagged as a real change alongside genuine ones (e.g. the ContratEcologico correction, or the Hospital -> ULS Alentejo Central rename).
 
 Array fields: staging keeps arrays close to the source shape. Marts unnests them into a star schema: fct_contracts as the fact table, dim_entities for adjudicante/adjudicatarios (ID as the key, name normalized), dim_cpv for CPV codes, and bridge_contract_locations / bridge_contract_cpv as junction tables for the many-to-many relationships.
