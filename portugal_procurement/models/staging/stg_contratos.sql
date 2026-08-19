@@ -1,3 +1,8 @@
+{{ config(
+    materialized='incremental',
+    unique_key='idcontrato',
+    incremental_strategy='merge'
+) }}
 with source as (
     select * from {{ source('raw', 'contratos') }}
 ),
