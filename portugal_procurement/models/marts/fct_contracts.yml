@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: fct_contracts
+    columns:
+      - name: idcontrato
+        data_tests:
+          - unique
+          - not_null
