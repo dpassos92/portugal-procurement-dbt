@@ -45,6 +45,7 @@ select
     role,
     entity_id,
     entity_name_raw,
+    no_prefix as entity_name_clean,
     entity_name_key,
     case when entity_id = '-' then entity_name_key else entity_id end as entity_key
 from normalized

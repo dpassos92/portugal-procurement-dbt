@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: bridge_contract_adjudicantes
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null
+      - name: entity_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_entities')
+              field: entity_key
