@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: dim_cpv
+    columns:
+      - name: cpv_code
+        data_tests:
+          - unique
+          - not_null

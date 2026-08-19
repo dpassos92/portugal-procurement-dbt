@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_cpv
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null
+      - name: cpv_code
+        data_tests:
+          - not_null
+      - name: cpv_description_raw
+        data_tests:
+          - not_null

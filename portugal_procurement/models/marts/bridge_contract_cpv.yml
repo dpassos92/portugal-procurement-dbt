@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: bridge_contract_cpv
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null
+      - name: cpv_code
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_cpv')
+              field: cpv_code
