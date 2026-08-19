@@ -3,3 +3,4 @@ venv/
 *.zip
 !dbt_project.yml
 data/
+logs/
