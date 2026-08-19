@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: bridge_contract_locations
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null

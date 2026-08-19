@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_locations
+    columns:
+      - name: idcontrato
+        data_tests:
+          - not_null
+      - name: country
+        data_tests:
+          - not_null
